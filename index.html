@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vasanth Perumal — WMS Implementation &amp; Operations</title>
+<meta name="description" content="WMS specialist. Blue Yonder, RedPrairie and Nulogy — configured, tested and operated in a live 3PL environment.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14181F;
+  --ink-2:#1C222C;
+  --steel:#5A6472;
+  --steel-lt:#8A93A1;
+  --concrete:#E8E6E1;
+  --paper:#F7F6F4;
+  --signal:#FFB000;
+  --scan:#00C2A8;
+  --line:rgba(255,255,255,.10);
+  --line-dk:rgba(20,24,31,.14);
+  --display:'Archivo',system-ui,sans-serif;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --wrap:1080px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+body{
+  background:var(--ink);
+  color:var(--concrete);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 28px}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--signal);outline-offset:3px;border-radius:2px}
+
+/* ---------- eyebrow label ---------- */
+.eyebrow{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--steel-lt);
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:22px;
+}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ---------- hero ---------- */
+.hero{
+  padding:74px 0 56px;
+  border-bottom:1px solid var(--line);
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:"";position:absolute;inset:0;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(ellipse 70% 80% at 78% 15%,#000 0%,transparent 72%);
+  -webkit-mask-image:radial-gradient(ellipse 70% 80% at 78% 15%,#000 0%,transparent 72%);
+  pointer-events:none;
+}
+.hero .wrap{position:relative}
+.hero-tag{
+  font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--signal);margin-bottom:20px;
+}
+h1{
+  font-family:var(--display);
+  font-weight:700;
+  font-size:clamp(38px,7vw,74px);
+  line-height:1.02;
+  letter-spacing:-.025em;
+  color:#fff;
+  margin-bottom:20px;
+}
+.lede{
+  font-size:clamp(17px,2.1vw,21px);
+  line-height:1.55;
+  color:var(--concrete);
+  max-width:62ch;
+  margin-bottom:32px;
+}
+.lede strong{color:#fff;font-weight:600}
+
+.stack{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:34px}
+.chip{
+  font-family:var(--mono);font-size:12px;letter-spacing:.03em;
+  padding:6px 12px;border:1px solid var(--line);border-radius:2px;
+  color:var(--concrete);background:rgba(255,255,255,.03);
+}
+.chip.on{border-color:rgba(255,176,0,.5);color:var(--signal)}
+
+.links{display:flex;flex-wrap:wrap;gap:10px}
+.btn{
+  font-family:var(--mono);font-size:12.5px;letter-spacing:.04em;
+  text-decoration:none;padding:11px 18px;border-radius:2px;
+  border:1px solid var(--line);transition:background .18s,border-color .18s,color .18s;
+}
+.btn:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.28)}
+.btn.pri{background:var(--signal);color:var(--ink);border-color:var(--signal);font-weight:500}
+.btn.pri:hover{background:#ffc233;border-color:#ffc233}
+
+/* ---------- generic section ---------- */
+section{padding:72px 0;border-bottom:1px solid var(--line)}
+h2{
+  font-family:var(--display);font-weight:600;
+  font-size:clamp(26px,3.6vw,38px);letter-spacing:-.02em;line-height:1.12;
+  color:#fff;margin-bottom:16px;
+}
+h3{
+  font-family:var(--display);font-weight:600;font-size:19px;
+  letter-spacing:-.01em;color:#fff;margin-bottom:8px;
+}
+p{color:var(--concrete);max-width:70ch}
+p + p{margin-top:14px}
+.muted{color:var(--steel-lt)}
+
+/* ---------- context strip ---------- */
+.ctx{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:36px}
+.ctx div{background:var(--ink);padding:20px 22px}
+.ctx dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--steel-lt);margin-bottom:7px}
+.ctx dd{font-size:15px;color:#fff;line-height:1.45}
+
+/* ---------- signature: architecture ---------- */
+.arch{background:var(--ink-2)}
+.diagram{
+  margin-top:34px;border:1px solid var(--line);border-radius:3px;
+  background:
+    linear-gradient(var(--line) 1px,transparent 1px) 0 0/28px 28px,
+    linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/28px 28px,
+    var(--ink);
+  padding:26px 20px;overflow-x:auto;
+}
+.diagram svg{display:block;min-width:660px;width:100%;height:auto;margin:0 auto}
+.flow-dash{stroke-dasharray:5 6;animation:march 1.1s linear infinite}
+@keyframes march{to{stroke-dashoffset:-22}}
+.legend{
+  display:flex;flex-wrap:wrap;gap:20px;margin-top:20px;
+  font-family:var(--mono);font-size:11.5px;color:var(--steel-lt);letter-spacing:.03em;
+}
+.legend span{display:flex;align-items:center;gap:8px}
+.key{width:16px;height:2px;display:inline-block}
+
+/* ---------- phases ---------- */
+.phases{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);margin-top:38px}
+.phase{background:var(--ink);padding:26px 26px 28px;display:grid;grid-template-columns:64px 1fr;gap:22px}
+.phase-n{font-family:var(--mono);font-size:12px;color:var(--signal);letter-spacing:.1em;padding-top:3px}
+.phase p{font-size:15.2px;color:var(--concrete);max-width:74ch}
+.did{
+  margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;
+}
+.did span{
+  font-family:var(--mono);font-size:11px;color:var(--steel-lt);
+  border:1px solid var(--line);padding:4px 9px;border-radius:2px;
+}
+
+/* ---------- floor / super user ---------- */
+.floor-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:26px;margin-top:34px}
+.floor-grid h3{font-size:17px}
+.floor-grid p{font-size:14.8px;color:var(--steel-lt)}
+.proc{
+  font-family:var(--mono);font-size:11.5px;color:var(--concrete);
+  display:flex;flex-wrap:wrap;gap:7px;margin-top:30px;
+}
+.proc span{border-left:2px solid var(--scan);padding:3px 10px;background:rgba(0,194,168,.05)}
+
+/* ---------- toolkit ---------- */
+.kit{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:34px}
+.kit div{background:var(--ink);padding:22px 24px}
+.kit h4{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--signal);font-weight:500;margin-bottom:12px}
+.kit ul{list-style:none;font-size:14.6px;color:var(--concrete)}
+.kit li{padding:3px 0}
+
+/* ---------- education ---------- */
+.edu{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);margin-top:36px}
+.edu article{background:var(--ink);padding:28px 28px 30px;display:grid;grid-template-columns:150px 1fr;gap:26px}
+.edu .when{font-family:var(--mono);font-size:11.5px;color:var(--steel-lt);letter-spacing:.06em;line-height:1.7;padding-top:4px}
+.edu .when b{display:block;color:var(--signal);font-weight:500;margin-bottom:4px}
+.edu h3{margin-bottom:4px}
+.edu .school{font-family:var(--mono);font-size:12px;color:var(--steel-lt);margin-bottom:14px;letter-spacing:.02em}
+.edu p{font-size:15px;color:var(--concrete);max-width:70ch}
+.mods{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.mods span{font-family:var(--mono);font-size:11px;color:var(--steel-lt);border:1px solid var(--line);padding:4px 9px;border-radius:2px}
+
+.certs{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.certs span{
+  font-family:var(--mono);font-size:11.5px;color:var(--concrete);
+  border:1px solid var(--line);border-left:2px solid var(--scan);
+  padding:7px 12px;background:rgba(255,255,255,.02);
+}
+
+@media (max-width:640px){
+  .edu article{grid-template-columns:1fr;gap:10px}
+}
+
+/* ---------- recognition ---------- */
+.award{
+  background:var(--ink-2);border:1px solid var(--line);
+  border-left:3px solid var(--signal);
+  padding:30px 32px;margin-top:32px;max-width:78ch;
+}
+.award blockquote{font-size:17px;line-height:1.6;color:#fff;font-style:normal}
+.award cite{
+  display:block;margin-top:16px;font-family:var(--mono);font-size:11.5px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--steel-lt);font-style:normal;
+}
+
+/* ---------- contact ---------- */
+.contact{border-bottom:none;padding-bottom:84px}
+.contact h2{margin-bottom:12px}
+
+footer{padding:26px 0 40px;border-top:1px solid var(--line)}
+footer p{font-family:var(--mono);font-size:11.5px;color:var(--steel);letter-spacing:.04em}
+
+@media (max-width:640px){
+  .hero{padding:52px 0 42px}
+  section{padding:54px 0}
+  .phase{grid-template-columns:1fr;gap:10px}
+  .diagram{padding:18px 12px}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-tag">Warehouse Management Systems · Chennai, India</div>
+    <h1>Vasanth<br>Perumal</h1>
+    <p class="lede">I work on warehouse systems from both sides — <strong>configuring and testing them</strong>, and <strong>running them on the floor</strong>. Most recently on a JDA RedPrairie to Blue Yonder WMS migration, plus a first-time Nulogy co-packing implementation, in a live 3PL operation. Computer science underneath, business analytics on top.</p>
+    <div class="stack">
+      <span class="chip on">Blue Yonder WMS</span>
+      <span class="chip on">Nulogy</span>
+      <span class="chip on">JDA RedPrairie</span>
+      <span class="chip">SQL</span>
+      <span class="chip">SAP / DHL Link</span>
+      <span class="chip">UAT &amp; SIT</span>
+    </div>
+    <div class="links">
+      <a class="btn pri" href="mailto:vasanthperumal2000@gmail.com">Email me</a>
+      <a class="btn" href="https://linkedin.com/in/vasanthperumal19" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">The project</div>
+    <h2>Replacing the system a warehouse runs on, without stopping the warehouse</h2>
+    <p>DHL Supply Chain ran its site on JDA RedPrairie. The programme replaced it with Blue Yonder WMS and, at the same time, introduced Nulogy to run co-packing — a system the site had never used before. Both had to land in an operation that was shipping every day for real clients.</p>
+    <p>A migration like this isn't a software install. The legacy system had years of accumulated process baked into it — the way stock was received, how locations were named, which rules governed picking. All of that had to be understood, questioned, mapped into a system that does things differently, and then proved to work before anyone could switch over. Meanwhile the warehouse still had orders to ship.</p>
+    <p>I came into it as a Team Leader who already knew how the floor worked, and ended up working across the transformation: gap analysis and functional design at the front, configuration and integration in the middle, then testing and go-live support at the end. The parts where I was hands-on in the system and the parts where I was doing business analysis are set out honestly below — both mattered, but they're different kinds of work.</p>
+    <dl class="ctx">
+      <div><dt>Operation</dt><dd>3PL warehousing, UK &amp; Ireland</dd></div>
+      <div><dt>Clients served</dt><dd>Lindt &amp; Ritter, including e-commerce fulfilment</dd></div>
+      <div><dt>Systems</dt><dd>JDA RedPrairie → Blue Yonder WMS + Nulogy</dd></div>
+      <div><dt>My span</dt><dd>Gap analysis → FDD → configuration → UAT → hypercare</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="arch">
+  <div class="wrap">
+    <div class="eyebrow">How the systems connect</div>
+    <h2>Three systems, one flow of stock</h2>
+    <p>Blue Yonder runs the warehouse. Nulogy runs co-pack production. They aren't the same system, so the two have to stay in step — item master data has to arrive in Nulogy correctly, stock has to move across, and what comes out of co-pack has to reconcile back. That exchange runs through DHL Link, the middleware layer, as XML messages.</p>
+
+    <div class="diagram">
+      <svg viewBox="0 0 720 300" role="img" aria-label="Diagram: SAP ERP and Blue Yonder WMS exchange data through DHL Link middleware, which also passes item master and stock to Nulogy for co-pack production, with output reconciling back to Blue Yonder.">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#8A93A1"/>
+          </marker>
+          <marker id="ar-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#FFB000"/>
+          </marker>
+          <marker id="ar-s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#00C2A8"/>
+          </marker>
+        </defs>
+
+        <!-- legacy -->
+        <rect x="14" y="24" width="132" height="52" rx="2" fill="none" stroke="rgba(255,255,255,.18)" stroke-dasharray="4 4"/>
+        <text x="80" y="47" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="12" fill="#8A93A1">JDA RedPrairie</text>
+        <text x="80" y="63" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10" fill="#5A6472">legacy</text>
+        <path d="M150 50 L214 50" stroke="#8A93A1" stroke-width="1.4" marker-end="url(#ar)"/>
+        <text x="182" y="40" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="9.5" fill="#8A93A1">migration</text>
+
+        <!-- BY -->
+        <rect x="218" y="14" width="188" height="72" rx="2" fill="rgba(255,176,0,.07)" stroke="#FFB000" stroke-width="1.2"/>
+        <text x="312" y="43" text-anchor="middle" font-family="Archivo,sans-serif" font-weight="600" font-size="16" fill="#fff">Blue Yonder WMS</text>
+        <text x="312" y="64" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10" fill="#FFB000">receiving · putaway · picking · dispatch</text>
+
+        <!-- SAP -->
+        <rect x="218" y="238" width="188" height="48" rx="2" fill="none" stroke="rgba(255,255,255,.2)"/>
+        <text x="312" y="267" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="12" fill="#E8E6E1">SAP ERP</text>
+
+        <!-- middleware -->
+        <rect x="196" y="132" width="232" height="52" rx="2" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.28)"/>
+        <text x="312" y="154" text-anchor="middle" font-family="Archivo,sans-serif" font-weight="600" font-size="13.5" fill="#fff">DHL Link (SAP Link)</text>
+        <text x="312" y="171" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10" fill="#8A93A1">XML message layer</text>
+
+        <!-- BY <-> middleware -->
+        <path d="M312 88 L312 130" stroke="#FFB000" stroke-width="1.4" marker-end="url(#ar-a)" class="flow-dash"/>
+        <!-- middleware <-> SAP -->
+        <path d="M312 186 L312 236" stroke="#8A93A1" stroke-width="1.4" marker-end="url(#ar)"/>
+
+        <!-- Nulogy -->
+        <rect x="512" y="14" width="194" height="72" rx="2" fill="rgba(0,194,168,.07)" stroke="#00C2A8" stroke-width="1.2"/>
+        <text x="609" y="43" text-anchor="middle" font-family="Archivo,sans-serif" font-weight="600" font-size="16" fill="#fff">Nulogy</text>
+        <text x="609" y="64" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10" fill="#00C2A8">co-pack production</text>
+
+        <!-- item master + stock to Nulogy -->
+        <path d="M428 146 C 470 146, 480 66, 508 56" stroke="#FFB000" stroke-width="1.4" fill="none" marker-end="url(#ar-a)" class="flow-dash"/>
+        <text x="486" y="126" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="9.5" fill="#FFB000">item master · stock</text>
+
+        <!-- reconcile back -->
+        <path d="M556 90 C 520 140, 420 120, 408 76" stroke="#00C2A8" stroke-width="1.4" fill="none" marker-end="url(#ar-s)"/>
+        <text x="486" y="196" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="9.5" fill="#00C2A8">finished goods reconciled back</text>
+      </svg>
+    </div>
+    <div class="legend">
+      <span><i class="key" style="background:#FFB000"></i> data out of Blue Yonder</span>
+      <span><i class="key" style="background:#00C2A8"></i> back into Blue Yonder</span>
+      <span><i class="key" style="background:#8A93A1"></i> host / legacy</span>
+    </div>
+    <p style="margin-top:24px" class="muted">When a message failed, co-pack stopped. Part of my work was tracing those failures in DHL Link, finding what had broken, and reprocessing the message to trigger the job again.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">What I did — in order</div>
+    <h2>From understanding the gap to standing on the floor at go-live</h2>
+
+    <div class="phases">
+      <article class="phase">
+        <div class="phase-n">01</div>
+        <div>
+          <h3>Gap analysis</h3>
+          <p>Compared how the site actually worked in JDA RedPrairie against how Blue Yonder would handle the same processes. Every gap forces a decision: change the way the operation works to fit the standard system, or configure the system to fit the operation. Getting that call wrong in either direction is expensive — one creates resistance on the floor, the other creates a system nobody can upgrade later.</p>
+          <p class="muted" style="font-size:14.5px;margin-top:10px">This was business analysis rather than build work: understanding the current state properly, documenting where the two systems diverged, and giving the team what they needed to make those decisions.</p>
+          <div class="did"><span>as-is / to-be mapping</span><span>process documentation</span><span>business analysis</span></div>
+        </div>
+      </article>
+
+      <article class="phase">
+        <div class="phase-n">02</div>
+        <div>
+          <h3>Functional design</h3>
+          <p>Contributed to the Functional Design Documents — the bridge between "the operation needs this" and something a build team can actually configure. An FDD has to carry the business requirement, the to-be process, the specific system behaviour expected, the integration touchpoints, and the scenarios it will later be tested against. Vague documents produce systems that pass testing and still fail on the floor.</p>
+          <p class="muted" style="font-size:14.5px;margin-top:10px">I sat in the client working sessions and deployment workshops where these decisions were argued out, which is also where you learn why a requirement exists rather than just what it says.</p>
+          <div class="did"><span>FDD authoring</span><span>requirements gathering</span><span>design workshops</span></div>
+        </div>
+      </article>
+
+      <article class="phase">
+        <div class="phase-n">03</div>
+        <div>
+          <h3>Configuration</h3>
+          <p>Hands-on in the system, setting up the master data everything else depends on. <b>Item master</b> — the SKU-level record carrying attributes, dimensions and handling rules; nothing moves correctly without it. <b>Item groups</b> — how products are classified so the system applies the right storage and pick strategy to the right stock. <b>Pick levels</b> — where in the racking picking actually happens, and what triggers replenishment behind it. <b>Access levels</b> — who is permitted to do what, which matters for both security and stopping mistakes at go-live.</p>
+          <p class="muted" style="font-size:14.5px;margin-top:10px">These are foundational rather than glamorous. Get item groups wrong and putaway and picking behave wrong everywhere downstream, in ways that only surface weeks later. I also worked the Nulogy side of the co-pack setup, on a platform the site was using for the first time.</p>
+          <div class="did"><span>item master</span><span>item groups</span><span>pick levels</span><span>access levels</span><span>Nulogy setup</span></div>
+        </div>
+      </article>
+
+      <article class="phase">
+        <div class="phase-n">04</div>
+        <div>
+          <h3>Integration &amp; SQL</h3>
+          <p>Systems that don't talk to each other correctly are worse than systems that don't talk at all — because the failure is silent until someone notices stock in one place and not the other. Item master and stock data pass from Blue Yonder through DHL Link into Nulogy as XML messages. When one failed, co-pack production stalled. My work was tracing the failure in the middleware, understanding what in the payload or the sequence had broken it, and reprocessing the message so the job would run.</p>
+          <p class="muted" style="font-size:14.5px;margin-top:10px">Alongside that, SQL for investigating job runs that hadn't completed — querying the data directly rather than guessing from the front end. That habit came from the Computer Science side of my background and turned out to be the fastest route to a root cause most of the time.</p>
+          <div class="did"><span>XML message handling</span><span>middleware troubleshooting</span><span>SQL diagnostics</span><span>WMS–ERP interface</span></div>
+        </div>
+      </article>
+
+      <article class="phase">
+        <div class="phase-n">05</div>
+        <div>
+          <h3>Testing and go-live</h3>
+          <p>Wrote the UAT scripts and then ran them — across inbound, outbound and inventory — tracing each test back to the requirement it was proving so nothing signed off untested. Defects went into ALM, got triaged and tracked, and were retested after fixes rather than assumed resolved.</p>
+          <p class="muted" style="font-size:14.5px;margin-top:10px">Then the part that can't be done from a desk: standing on the floor through go-live and hypercare, working real orders on the new system, resolving what came up in the moment and helping staff who had used the old system for years learn the new one mid-shift. This phase is what the site recognition below was awarded for.</p>
+          <div class="did"><span>UAT authoring</span><span>SIT</span><span>traceability</span><span>defect management (ALM)</span><span>hypercare</span><span>user training</span></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">The other half</div>
+    <h2>I also ran the systems, not just built them</h2>
+    <p>Before and alongside the project I was an operational super user across all three platforms — RedPrairie, Blue Yonder and Nulogy — on live 3PL operations for Lindt and Ritter across the UK and Ireland, including e-commerce order fulfilment.</p>
+
+    <div class="floor-grid">
+      <div>
+        <h3>Why it matters in testing</h3>
+        <p>A test script tells you whether the system does what the document says. Knowing the floor tells you whether that's what the operation actually needs at 6am on a peak Friday.</p>
+      </div>
+      <div>
+        <h3>Why it matters in design</h3>
+        <p>Configuration decisions look abstract in a workshop. They show up later as an operator walking an extra aisle on every pick.</p>
+      </div>
+      <div>
+        <h3>Why it matters at go-live</h3>
+        <p>When something breaks in hypercare, being able to work the process yourself is faster than describing it to someone who can.</p>
+      </div>
+    </div>
+
+    <div class="proc">
+      <span>receiving</span><span>putaway</span><span>replenishment</span><span>picking</span><span>packing</span><span>dispatch</span><span>inventory</span><span>cycle counting</span><span>RF transactions</span><span>e-commerce fulfilment</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">Toolkit</div>
+    <h2>What I work with</h2>
+    <div class="kit">
+      <div>
+        <h4>Systems</h4>
+        <ul>
+          <li>Blue Yonder WMS</li>
+          <li>Nulogy</li>
+          <li>JDA RedPrairie</li>
+          <li>DHL Link / SAP Link</li>
+          <li>ALM</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Analysis</h4>
+        <ul>
+          <li>Gap analysis</li>
+          <li>Functional design (FDD)</li>
+          <li>Requirements gathering</li>
+          <li>Process mapping</li>
+          <li>SOPs &amp; work instructions</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Testing</h4>
+        <ul>
+          <li>UAT script authoring</li>
+          <li>System integration testing</li>
+          <li>Defect management</li>
+          <li>Configuration validation</li>
+          <li>Hypercare support</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Technical</h4>
+        <ul>
+          <li>SQL</li>
+          <li>XML message handling</li>
+          <li>Middleware troubleshooting</li>
+          <li>Python (Pandas, Scikit-learn)</li>
+          <li>Data analysis</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">Background</div>
+    <h2>Two degrees that meet in the middle of this work</h2>
+    <p>Warehouse systems sit exactly between technology and business. My education happens to run down both sides of that line — computer science underneath, business analytics on top — which is a large part of why the technical and the functional halves of this job both make sense to me.</p>
+
+    <div class="edu">
+      <article>
+        <div class="when"><b>2022 — 2023</b>Birmingham,<br>United Kingdom</div>
+        <div>
+          <h3>MSc Business Analytics</h3>
+          <div class="school">Aston University</div>
+          <p>The analytical half. Learning how to take messy operational data and turn it into something a business can decide on — which is the same instinct behind gap analysis, reading a failed job run, or working out why a KPI moved. Predictive analytics and data mining also gave me a working comfort with the data layer that a lot of functional consultants don't have.</p>
+          <div class="mods"><span>Data Mining</span><span>Predictive Analytics</span><span>Decision Models</span><span>Big Data</span><span>Business Analytics in Practice</span></div>
+        </div>
+      </article>
+
+      <article>
+        <div class="when"><b>2017 — 2021</b>Chennai,<br>India</div>
+        <div>
+          <h3>BE Computer Science Engineering</h3>
+          <div class="school">Rajalakshmi Engineering College</div>
+          <p>The technical foundation. Databases, programming and systems thinking are the reason SQL, XML message structures and integration flows read as familiar rather than intimidating. When an interface fails between two systems, this is the background that makes it a problem to trace rather than a black box to escalate.</p>
+          <div class="mods"><span>Databases</span><span>Python</span><span>Business Intelligence</span><span>Cloud Computing</span><span>Computer Networks</span></div>
+        </div>
+      </article>
+    </div>
+
+    <div style="margin-top:34px">
+      <div class="eyebrow">Certifications</div>
+      <div class="certs">
+        <span>Business Analysis Foundations — IIBA</span>
+        <span>Business Process Modelling — IIBA</span>
+        <span>Agile Project Management — Atlassian</span>
+        <span>Python: Predictive Analytics — NASBA</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="eyebrow">Recognition</div>
+    <h2>Site Employee of the Month</h2>
+    <div class="award">
+      <blockquote>“He has put forth an extraordinary amount of effort, demonstrating exceptional skill during User Acceptance Testing. His commitment has only intensified during the go-live phase, where he has been a pillar of support for the implementers.”</blockquote>
+      <cite>DHL Supply Chain · July 2026</cite>
+    </div>
+  </div>
+</section>
+
+<section class="contact">
+  <div class="wrap">
+    <div class="eyebrow">Get in touch</div>
+    <h2>Open to WMS and supply chain systems roles in India</h2>
+    <p class="muted">Functional consultant, business analyst, systems analyst or implementation support — anywhere the work involves warehouse systems and the people who use them.</p>
+    <div class="links" style="margin-top:28px">
+      <a class="btn pri" href="mailto:vasanthperumal2000@gmail.com">vasanthperumal2000@gmail.com</a>
+      <a class="btn" href="https://linkedin.com/in/vasanthperumal19" target="_blank" rel="noopener">linkedin.com/in/vasanthperumal19</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap"><p>Vasanth Perumal — WMS implementation &amp; operations</p></div>
+</footer>
+
+</body>
+</html>
